@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hospital Patient Management System</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0D1117;
+    --surface: #161B22;
+    --surface2: #1C2230;
+    --surface3: #222B3A;
+    --border: rgba(99,140,180,0.14);
+    --border2: rgba(99,140,180,0.22);
+    --accent: #3B82F6;
+    --accent-soft: rgba(59,130,246,0.12);
+    --accent-glow: rgba(59,130,246,0.25);
+    --emergency: #EF4444;
+    --emergency-soft: rgba(239,68,68,0.12);
+    --urgent: #F59E0B;
+    --urgent-soft: rgba(245,158,11,0.12);
+    --normal: #10B981;
+    --normal-soft: rgba(16,185,129,0.12);
+    --text: #E6EDF3;
+    --text2: #8B949E;
+    --text3: #4A5568;
+    --font-display: 'DM Serif Display', Georgia, serif;
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --r: 10px;
+    --r-sm: 6px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+
+  html { font-size: 15px; }
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-icon svg { width: 18px; height: 18px; }
+  .header-stats {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
+  .hstat {
+    text-align: right;
+  }
+  .hstat-num {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1;
+  }
+  .hstat-label {
+    font-size: 0.72rem;
+    color: var(--text2);
+    margin-top: 2px;
+  }
+  .hstat-div { width: 1px; height: 30px; background: var(--border); }
+
+  /* ── LAYOUT ── */
+  .app {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 20px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .sidebar-section-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text3);
+    padding: 10px 10px 6px;
+    margin-top: 8px;
+  }
+  .nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: var(--r-sm);
+    border: none;
+    background: transparent;
+    color: var(--text2);
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .nav-btn:hover { background: var(--surface2); color: var(--text); }
+  .nav-btn.active { background: var(--accent-soft); color: var(--accent); }
+  .nav-btn.active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 4px; bottom: 4px;
+    width: 3px;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+  .nav-icon { width: 16px; height: 16px; flex-shrink: 0; }
+  .nav-badge {
+    margin-left: auto;
+    background: var(--emergency);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 10px;
+    min-width: 20px;
+    text-align: center;
+  }
+  .nav-badge.blue { background: var(--accent); }
+  .nav-badge.green { background: var(--normal); }
+
+  /* ── MAIN CONTENT ── */
+  main {
+    overflow-y: auto;
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .view { display: none; flex-direction: column; gap: 20px; }
+  .view.active { display: flex; }
+
+  /* ── PAGE HEADER ── */
+  .page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+  .page-title {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    color: var(--text);
+    line-height: 1;
+  }
+  .page-sub { font-size: 0.82rem; color: var(--text2); margin-top: 5px; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .card-title {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-body { padding: 20px; }
+
+  /* ── STAT CARDS ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    transform: translate(25px, -25px);
+    opacity: 0.06;
+  }
+  .stat-card.blue::after { background: var(--accent); }
+  .stat-card.red::after { background: var(--emergency); }
+  .stat-card.amber::after { background: var(--urgent); }
+  .stat-card.green::after { background: var(--normal); }
+  .stat-icon {
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 12px;
+  }
+  .stat-icon.blue { background: var(--accent-soft); color: var(--accent); }
+  .stat-icon.red { background: var(--emergency-soft); color: var(--emergency); }
+  .stat-icon.amber { background: var(--urgent-soft); color: var(--urgent); }
+  .stat-icon.green { background: var(--normal-soft); color: var(--normal); }
+  .stat-icon svg { width: 18px; height: 18px; }
+  .stat-num {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    line-height: 1;
+    color: var(--text);
+  }
+  .stat-label {
+    font-size: 0.78rem;
+    color: var(--text2);
+    margin-top: 4px;
+  }
+
+  /* ── TABLE ── */
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+  thead th {
+    padding: 10px 16px;
+    text-align: left;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text2);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.12s;
+    animation: fadeRow 0.3s ease forwards;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+  td {
+    padding: 12px 16px;
+    color: var(--text);
+    vertical-align: middle;
+  }
+  @keyframes fadeRow {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── PRIORITY BADGE ── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+  .badge::before {
+    content: '';
+    width: 5px; height: 5px;
+    border-radius: 50%;
+  }
+  .badge.emergency { background: var(--emergency-soft); color: var(--emergency); }
+  .badge.emergency::before { background: var(--emergency); }
+  .badge.urgent { background: var(--urgent-soft); color: var(--urgent); }
+  .badge.urgent::before { background: var(--urgent); }
+  .badge.normal { background: var(--normal-soft); color: var(--normal); }
+  .badge.normal::before { background: var(--normal); }
+
+  /* ── POSITION BADGE ── */
+  .pos-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    font-size: 0.78rem;
+    font-weight: 700;
+    background: var(--surface3);
+    color: var(--text2);
+  }
+  .pos-badge.first { background: var(--accent-soft); color: var(--accent); }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 16px;
+    border-radius: var(--r-sm);
+    border: none;
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn svg { width: 15px; height: 15px; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #2563EB; }
+  .btn-danger { background: var(--emergency-soft); color: var(--emergency); border: 1px solid rgba(239,68,68,0.2); }
+  .btn-danger:hover { background: rgba(239,68,68,0.2); }
+  .btn-amber { background: var(--urgent-soft); color: var(--urgent); border: 1px solid rgba(245,158,11,0.2); }
+  .btn-amber:hover { background: rgba(245,158,11,0.2); }
+  .btn-ghost { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--surface3); color: var(--text); }
+  .btn-sm { padding: 5px 10px; font-size: 0.78rem; }
+
+  /* ── FORM ── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-full { grid-column: 1 / -1; }
+  .field label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text2);
+    margin-bottom: 6px;
+  }
+  .field input,
+  .field select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    padding: 9px 13px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .field input:focus,
+  .field select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  .field select option { background: var(--surface2); }
+  .field input::placeholder { color: var(--text3); }
+  .form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 6px;
+  }
+
+  /* ── SEARCH BAR ── */
+  .search-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .search-box {
+    position: relative;
+    flex: 1;
+    max-width: 340px;
+  }
+  .search-box svg {
+    position: absolute;
+    left: 11px; top: 50%;
+    transform: translateY(-50%);
+    width: 15px; height: 15px;
+    color: var(--text3);
+  }
+  .search-box input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    padding: 8px 12px 8px 34px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .search-box input:focus { border-color: var(--accent); }
+  .search-box input::placeholder { color: var(--text3); }
+
+  /* ── TOAST ── */
+  #toast-container {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 999;
+  }
+  .toast {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 12px 16px;
+    font-size: 0.85rem;
+    color: var(--text);
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideIn 0.25s ease;
+    min-width: 260px;
+    max-width: 360px;
+  }
+  .toast.success { border-left: 3px solid var(--normal); }
+  .toast.error   { border-left: 3px solid var(--emergency); }
+  .toast.info    { border-left: 3px solid var(--accent); }
+  .toast.warn    { border-left: 3px solid var(--urgent); }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 14px;
+    padding: 28px;
+    width: 480px;
+    max-width: 95vw;
+    box-shadow: var(--shadow);
+    animation: popIn 0.2s ease;
+  }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  .modal-title {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── PATIENT DETAIL ── */
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .detail-item label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text3);
+  }
+  .detail-item .val {
+    font-size: 0.95rem;
+    color: var(--text);
+    margin-top: 3px;
+  }
+
+  /* ── QUEUE VIEW ── */
+  .queue-visual {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 20px;
+  }
+  .queue-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    border-radius: var(--r-sm);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+    animation: fadeRow 0.3s ease;
+  }
+  .queue-item:first-child {
+    background: var(--accent-soft);
+    border-color: rgba(59,130,246,0.25);
+  }
+  .queue-item-info { flex: 1; }
+  .queue-item-name { font-weight: 600; font-size: 0.92rem; }
+  .queue-item-meta { font-size: 0.78rem; color: var(--text2); margin-top: 2px; }
+  .queue-arrow {
+    color: var(--text3);
+    font-size: 1.2rem;
+    text-align: center;
+    font-weight: 300;
+  }
+
+  /* ── HISTORY STACK ── */
+  .stack-visual {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 20px;
+  }
+  .stack-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 18px;
+    border-radius: var(--r-sm);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    animation: fadeRow 0.3s ease;
+  }
+  .stack-item:first-child {
+    background: var(--normal-soft);
+    border-color: rgba(16,185,129,0.25);
+  }
+  .stack-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text3);
+    padding: 2px 7px;
+    background: var(--surface3);
+    border-radius: 4px;
+    margin-left: auto;
+  }
+  .stack-label.top { color: var(--normal); background: var(--normal-soft); }
+
+  /* ── EMPTY ── */
+  .empty {
+    padding: 48px 24px;
+    text-align: center;
+    color: var(--text3);
+  }
+  .empty-icon { font-size: 2.5rem; margin-bottom: 10px; opacity: 0.4; }
+  .empty-text { font-size: 0.9rem; }
+
+  /* ── SEARCH RESULT ── */
+  .search-result {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--r);
+    padding: 20px;
+    display: none;
+  }
+  .search-result.show { display: block; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* ── SERVE NEXT BUTTON AREA ── */
+  .serve-panel {
+    background: linear-gradient(135deg, var(--accent-soft), transparent);
+    border: 1px solid rgba(59,130,246,0.2);
+    border-radius: var(--r);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .serve-info .serve-label { font-size: 0.78rem; color: var(--text2); }
+  .serve-info .serve-name { font-size: 1.05rem; font-weight: 600; color: var(--text); margin-top: 3px; }
+  .serve-info .serve-meta { font-size: 0.8rem; color: var(--text2); margin-top: 2px; }
+
+  /* ── ID CHIP ── */
+  .id-chip {
+    font-family: monospace;
+    font-size: 0.82rem;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 2px 7px;
+    border-radius: 4px;
+  }
+
+  /* ── ANIMATIONS ── */
+  .view.active { animation: viewFade 0.2s ease; }
+  @keyframes viewFade {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 21H3a2 2 0 01-2-2V5a2 2 0 012-2h18a2 2 0 012 2v7M9 12h6m-3-3v6m5 3h6m-3-3v6"/>
+      </svg>
+    </div>
+    Hospital PMS
+  </div>
+  <div class="header-stats">
+    <div class="hstat">
+      <div class="hstat-num" id="h-total">5</div>
+      <div class="hstat-label">Total Patients</div>
+    </div>
+    <div class="hstat-div"></div>
+    <div class="hstat">
+      <div class="hstat-num" id="h-queue">0</div>
+      <div class="hstat-label">In Queue</div>
+    </div>
+    <div class="hstat-div"></div>
+    <div class="hstat">
+      <div class="hstat-num" id="h-treated">0</div>
+      <div class="hstat-label">Treated</div>
+    </div>
+  </div>
+</header>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-section-label">Overview</div>
+    <button class="nav-btn active" onclick="showView('dashboard')">
+      <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </button>
+
+    <div class="sidebar-section-label">Registry</div>
+    <button class="nav-btn" onclick="showView('register')">
+      <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
+      Register Patient
+    </button>
+    <button class="nav-btn" onclick="showView('patients')">
+      <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+      All Patients
+      <span class="nav-badge blue" id="sb-total">5</span>
+    </button>
+    <button class="nav-btn" onclick="showView('search')">
+      <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
+      Search by ID
+    </button>
+
+    <div class="sidebar-section-label">Queue & Treatment</div>
+    <button class="nav-btn" onclick="showView('queue')">
+      <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      Waiting Queue
+      <span class="nav-badge" id="sb-queue">0</span>
+    </button>
+    <button class="nav-btn" onclick="showView('history')">
+      <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      Treatment History
+      <span class="nav-badge green" id="sb-treated">0</span>
+    </button>
+  </nav>
+
+  <!-- MAIN -->
+  <main>
+
+    <!-- DASHBOARD -->
+    <div class="view active" id="view-dashboard">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Dashboard</div>
+          <div class="page-sub">Real-time overview of hospital patient management</div>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card blue">
+          <div class="stat-icon blue">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8"/></svg>
+          </div>
+          <div class="stat-num" id="stat-total">5</div>
+          <div class="stat-label">Registered Patients</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-icon red">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4.318 6.318a4.5 4.5 0 010 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+          </div>
+          <div class="stat-num" id="stat-emergency">1</div>
+          <div class="stat-label">Emergency Cases</div>
+        </div>
+        <div class="stat-card amber">
+          <div class="stat-icon amber">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div class="stat-num" id="stat-queue">0</div>
+          <div class="stat-label">In Waiting Queue</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-icon green">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div class="stat-num" id="stat-treated">0</div>
+          <div class="stat-label">Treated Today</div>
+        </div>
+      </div>
+
+      <!-- Recent patients table -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            Registered Patients
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-ghost btn-sm" onclick="showView('register')">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
+              Add Patient
+            </button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Disease</th>
+                <th>Priority</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="db-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="view" id="view-register">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Register New Patient</div>
+          <div class="page-sub">Add a new patient to the registry (Linked List)</div>
+        </div>
+      </div>
+      <div class="card" style="max-width:600px;">
+        <div class="card-header">
+          <div class="card-title">Patient Information</div>
+        </div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="field form-full">
+              <label>Full Name *</label>
+              <input type="text" id="reg-name" placeholder="e.g. Amal Perera">
+            </div>
+            <div class="field">
+              <label>Age *</label>
+              <input type="number" id="reg-age" placeholder="e.g. 45" min="0" max="150">
+            </div>
+            <div class="field">
+              <label>Priority *</label>
+              <select id="reg-priority">
+                <option value="1">🔴 Emergency</option>
+                <option value="2">🟡 Urgent</option>
+                <option value="3" selected>🟢 Normal</option>
+              </select>
+            </div>
+            <div class="field form-full">
+              <label>Disease / Condition *</label>
+              <input type="text" id="reg-disease" placeholder="e.g. Chest Pain">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" onclick="registerPatient()">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
+              Register Patient
+            </button>
+            <button class="btn btn-ghost" onclick="clearRegForm()">Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALL PATIENTS -->
+    <div class="view" id="view-patients">
+      <div class="page-header">
+        <div>
+          <div class="page-title">All Patients</div>
+          <div class="page-sub">Complete registry — Linked List</div>
+        </div>
+        <div class="search-row">
+          <div class="search-box">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
+            <input type="text" id="patient-search" placeholder="Filter by name or disease…" oninput="filterPatients()">
+          </div>
+          <select id="priority-filter" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);font-family:var(--font-body);font-size:0.85rem;outline:none;" onchange="filterPatients()">
+            <option value="">All Priorities</option>
+            <option value="1">Emergency</option>
+            <option value="2">Urgent</option>
+            <option value="3">Normal</option>
+          </select>
+        </div>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Disease</th>
+                <th>Priority</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="patients-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEARCH -->
+    <div class="view" id="view-search">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Search Patient</div>
+          <div class="page-sub">Fast lookup by ID — Binary Search Tree (BST)</div>
+        </div>
+      </div>
+      <div class="card" style="max-width:480px;">
+        <div class="card-body">
+          <div class="field">
+            <label>Patient ID</label>
+            <input type="number" id="search-id" placeholder="e.g. 1001" onkeydown="if(event.key==='Enter') searchPatient()">
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" onclick="searchPatient()">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
+              Search
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="search-result" id="search-result">
+        <div class="detail-grid" id="search-result-content"></div>
+      </div>
+    </div>
+
+    <!-- QUEUE -->
+    <div class="view" id="view-queue">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Waiting Queue</div>
+          <div class="page-sub">Priority Queue — Emergency first, then Urgent, then Normal</div>
+        </div>
+      </div>
+      <!-- Add to queue -->
+      <div class="card" style="max-width:480px;">
+        <div class="card-header">
+          <div class="card-title">Add to Queue</div>
+        </div>
+        <div class="card-body" style="display:flex;gap:10px;align-items:flex-end;">
+          <div class="field" style="flex:1;margin:0;">
+            <label>Patient ID</label>
+            <input type="number" id="enqueue-id" placeholder="e.g. 1001">
+          </div>
+          <button class="btn btn-primary" onclick="enqueuePatient()">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
+            Add to Queue
+          </button>
+        </div>
+      </div>
+      <!-- Next up panel -->
+      <div id="serve-panel-wrap"></div>
+      <!-- Queue list -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Current Queue</div>
+          <span id="queue-count-label" style="font-size:0.8rem;color:var(--text2);">0 patients</span>
+        </div>
+        <div id="queue-list"></div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="view" id="view-history">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Treatment History</div>
+          <div class="page-sub">Stack — most recently treated on top</div>
+        </div>
+        <button class="btn btn-amber" onclick="undoTreatment()">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6M3 10l6-6"/></svg>
+          Undo Last Treatment
+        </button>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Treated Patients
+          </div>
+          <span id="history-count-label" style="font-size:0.8rem;color:var(--text2);">0 patients</span>
+        </div>
+        <div id="history-list"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL: Patient Detail -->
+<div class="modal-overlay" id="modal-detail">
+  <div class="modal">
+    <div class="modal-title">Patient Details</div>
+    <div class="detail-grid" id="modal-detail-content"></div>
+    <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;" id="modal-actions"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast-container"></div>
+
+<script>
+// ═══════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════
+const API_BASE = '/api';
+let patients = [];
+let queue = [];
+let historyData = [];
+
+// ═══════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════
+function priorityLabel(p) {
+  return p === 1 ? 'Emergency' : p === 2 ? 'Urgent' : 'Normal';
+}
+function priorityClass(p) {
+  return p === 1 ? 'emergency' : p === 2 ? 'urgent' : 'normal';
+}
+function badgeHtml(p) {
+  return `<span class="badge ${priorityClass(p)}">${priorityLabel(p)}</span>`;
+}
+function idHtml(id) {
+  return `<span class="id-chip">#${id}</span>`;
+}
+function toast(msg, type = 'info') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+async function apiRequest(path, options = {}) {
+  try {
+    const res = await fetch(API_BASE + path, options);
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(body || `${res.status} ${res.statusText}`);
+    }
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      return await res.json();
+    }
+    return await res.text();
+  } catch (error) {
+    throw new Error(error.message || 'Request failed');
+  }
+}
+function updateCounters() {
+  const emergencyCount = patients.filter(p => p.priority === 1).length;
+  document.getElementById('h-total').textContent = patients.length;
+  document.getElementById('h-queue').textContent = queue.length;
+  document.getElementById('h-treated').textContent = historyData.length;
+  document.getElementById('stat-total').textContent = patients.length;
+  document.getElementById('stat-emergency').textContent = emergencyCount;
+  document.getElementById('stat-queue').textContent = queue.length;
+  document.getElementById('stat-treated').textContent = historyData.length;
+  document.getElementById('sb-total').textContent = patients.length;
+  const qBadge = document.getElementById('sb-queue');
+  qBadge.textContent = queue.length;
+  qBadge.style.display = queue.length ? 'inline' : 'none';
+  document.getElementById('sb-treated').textContent = historyData.length;
+}
+async function refreshAll() {
+  const [patientsResp, queueResp, historyResp] = await Promise.all([
+    apiRequest('/patients'),
+    apiRequest('/queue'),
+    apiRequest('/history')
+  ]);
+  patients = patientsResp.patients || [];
+  queue = queueResp.queue || [];
+  historyData = historyResp.history || [];
+  updateCounters();
+}
+
+// ═══════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════
+async function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  const btns = document.querySelectorAll('.nav-btn');
+  btns.forEach(b => { if (b.getAttribute('onclick').includes("'" + name + "'")) b.classList.add('active'); });
+  await renderView(name);
+}
+async function renderView(name) {
+  if (name === 'dashboard' || name === 'patients') await renderPatientsTable();
+  if (name === 'queue') await renderQueue();
+  if (name === 'history') await renderHistory();
+  updateCounters();
+}
+
+// ═══════════════════════════════════════
+//  REGISTER
+// ═══════════════════════════════════════
+async function registerPatient() {
+  const name     = document.getElementById('reg-name').value.trim();
+  const age      = parseInt(document.getElementById('reg-age').value, 10);
+  const disease  = document.getElementById('reg-disease').value.trim();
+  const priority = parseInt(document.getElementById('reg-priority').value, 10);
+
+  if (!name) { toast('Please enter patient name', 'error'); return; }
+  if (!age || age < 0 || age > 150) { toast('Please enter a valid age', 'error'); return; }
+  if (!disease) { toast('Please enter disease/condition', 'error'); return; }
+
+  try {
+    await apiRequest('/patients', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, age, disease, priority })
+    });
+    toast(`Patient ${name} registered!`, 'success');
+    clearRegForm();
+    await refreshAll();
+    await renderPatientsTable();
+  } catch (error) {
+    toast(error.message, 'error');
+  }
+}
+function clearRegForm() {
+  ['reg-name','reg-age','reg-disease'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('reg-priority').value = '3';
+}
+
+// ═══════════════════════════════════════
+//  PATIENTS TABLE
+// ═══════════════════════════════════════
+async function renderPatientsTable(filtered) {
+  if (!filtered) {
+    const data = await apiRequest('/patients');
+    patients = data.patients || [];
+  }
+  const list = filtered || patients;
+  const tbody = document.getElementById('patients-body');
+  const dbBody = document.getElementById('db-table-body');
+  const rows = list.map(p => `
+    <tr>
+      <td>${idHtml(p.id)}</td>
+      <td><strong>${p.name}</strong></td>
+      <td>${p.age}</td>
+      <td>${p.disease}</td>
+      <td>${badgeHtml(p.priority)}</td>
+      <td>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-ghost btn-sm" onclick="showDetail(${p.id})">View</button>
+          <button class="btn btn-ghost btn-sm" onclick="queueFromDetail(${p.id})">+ Queue</button>
+          <button class="btn btn-danger btn-sm" onclick="removePatient(${p.id})">Remove</button>
+        </div>
+      </td>
+    </tr>`).join('') || `<tr><td colspan="6"><div class="empty"><div class="empty-icon">👤</div><div class="empty-text">No patients found</div></div></td></tr>`;
+  if (tbody) tbody.innerHTML = rows;
+  if (dbBody) dbBody.innerHTML = rows;
+}
+async function filterPatients() {
+  const q  = document.getElementById('patient-search').value.toLowerCase();
+  const pf = document.getElementById('priority-filter').value;
+  const filtered = patients.filter(p =>
+    (p.name.toLowerCase().includes(q) || p.disease.toLowerCase().includes(q)) &&
+    (!pf || p.priority === parseInt(pf, 10))
+  );
+  renderPatientsTable(filtered);
+}
+
+// ═══════════════════════════════════════
+//  SEARCH
+// ═══════════════════════════════════════
+async function searchPatient() {
+  const id = parseInt(document.getElementById('search-id').value, 10);
+  const result = document.getElementById('search-result');
+  const content = document.getElementById('search-result-content');
+  if (!id) { toast('Please enter a patient ID', 'error'); return; }
+
+  try {
+    const resp = await apiRequest(`/patients/${id}`);
+    const p = resp.patient;
+    content.innerHTML = `
+      <div class="detail-item"><label>Patient ID</label><div class="val">${idHtml(p.id)}</div></div>
+      <div class="detail-item"><label>Full Name</label><div class="val"><strong>${p.name}</strong></div></div>
+      <div class="detail-item"><label>Age</label><div class="val">${p.age} years</div></div>
+      <div class="detail-item"><label>Priority</label><div class="val">${badgeHtml(p.priority)}</div></div>
+      <div class="detail-item" style="grid-column:1/-1;"><label>Disease / Condition</label><div class="val">${p.disease}</div></div>
+      <div class="detail-item" style="grid-column:1/-1;">
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button class="btn btn-primary btn-sm" onclick="queueFromDetail(${p.id})">+ Add to Queue</button>
+          <button class="btn btn-danger btn-sm" onclick="removePatient(${p.id})">Remove Patient</button>
+        </div>
+      </div>
+    `;
+    result.classList.add('show');
+    toast(`Patient found: ${p.name}`, 'success');
+  } catch (error) {
+    toast(error.message, 'error');
+    result.classList.remove('show');
+  }
+}
+
+// ═══════════════════════════════════════
+//  QUEUE
+// ═══════════════════════════════════════
+async function enqueuePatient() {
+  const id = parseInt(document.getElementById('enqueue-id').value, 10);
+  if (!id) { toast('Please enter a patient ID', 'error'); return; }
+  try {
+    await apiRequest('/queue', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    document.getElementById('enqueue-id').value = '';
+    toast(`Patient added to queue`, 'success');
+    await refreshAll();
+    renderQueue();
+  } catch (error) {
+    toast(error.message, 'error');
+  }
+}
+async function queueFromDetail(id) {
+  try {
+    await apiRequest('/queue', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    toast(`Patient added to queue`, 'success');
+    await refreshAll();
+    renderQueue();
+    closeModal();
+  } catch (error) {
+    toast(error.message, 'error');
+  }
+}
+async function serveNext() {
+  try {
+    await apiRequest('/serve', { method: 'POST' });
+    toast('Next patient is being served', 'success');
+    await refreshAll();
+    renderQueue();
+    renderHistory();
+  } catch (error) {
+    toast(error.message, 'error');
+  }
+}
+async function renderQueue() {
+  const wrap = document.getElementById('serve-panel-wrap');
+  const list  = document.getElementById('queue-list');
+  const label = document.getElementById('queue-count-label');
+  if (!list) return;
+  label.textContent = `${queue.length} patient${queue.length !== 1 ? 's' : ''}`;
+
+  if (queue.length > 0) {
+    const next = queue[0];
+    wrap.innerHTML = `
+      <div class="serve-panel">
+        <div class="serve-info">
+          <div class="serve-label">Next to be served</div>
+          <div class="serve-name">${next.name}</div>
+          <div class="serve-meta">${next.disease} · ${badgeHtml(next.priority)}</div>
+        </div>
+        <button class="btn btn-primary" onclick="serveNext()">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Serve Next Patient
+        </button>
+      </div>`;
+  } else {
+    wrap.innerHTML = '';
+  }
+
+  if (!queue.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">🏥</div><div class="empty-text">Queue is empty. Add patients above.</div></div>`;
+    return;
+  }
+  list.innerHTML = `<div class="queue-visual">${queue.map((p, i) => `
+    <div class="queue-item">
+      <div class="pos-badge ${i === 0 ? 'first' : ''}">${i + 1}</div>
+      <div class="queue-item-info">
+        <div class="queue-item-name">${p.name}</div>
+        <div class="queue-item-meta">${idHtml(p.id)} · ${p.disease} · Age ${p.age}</div>
+      </div>
+      ${badgeHtml(p.priority)}
+    </div>`).join('')}
+  </div>`;
+}
+
+// ═══════════════════════════════════════
+//  HISTORY / STACK
+// ═══════════════════════════════════════
+async function undoTreatment() {
+  try {
+    await apiRequest('/undo', { method: 'POST' });
+    toast('Last treatment undone', 'warn');
+    await refreshAll();
+    renderHistory();
+    renderQueue();
+  } catch (error) {
+    toast(error.message, 'error');
+  }
+}
+function renderHistory() {
+  const list  = document.getElementById('history-list');
+  const label = document.getElementById('history-count-label');
+  if (!list) return;
+  label.textContent = `${historyData.length} patient${historyData.length !== 1 ? 's' : ''}`;
+  if (!historyData.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">No treatment history yet.</div></div>`;
+    return;
+  }
+  list.innerHTML = `<div class="stack-visual">${historyData.map((p, i) => `
+    <div class="stack-item">
+      <div class="pos-badge" style="background:var(--normal-soft);color:var(--normal);">✓</div>
+      <div class="queue-item-info">
+        <div class="queue-item-name">${p.name}</div>
+        <div class="queue-item-meta">${idHtml(p.id)} · ${p.disease} · Age ${p.age}</div>
+      </div>
+      ${badgeHtml(p.priority)}
+      <span class="stack-label ${i === 0 ? 'top' : ''}">${i === 0 ? 'TOP' : 'STACK'}</span>
+    </div>`).join('')}
+  </div>`;
+}
+
+// ═══════════════════════════════════════
+//  REMOVE
+// ═══════════════════════════════════════
+async function removePatient(id) {
+  const p = patients.find(x => x.id === id);
+  if (!p) return;
+  if (!confirm(`Remove patient ${p.name} (ID: ${id}) from registry?`)) return;
+  try {
+    await apiRequest(`/patients/${id}`, { method: 'DELETE' });
+    toast(`Patient ${p.name} removed from registry`, 'warn');
+    await refreshAll();
+    renderPatientsTable();
+    renderQueue();
+    closeModal();
+  } catch (error) {
+    toast(error.message, 'error');
+  }
+}
+
+// ═══════════════════════════════════════
+//  DETAIL MODAL
+// ═══════════════════════════════════════
+async function showDetail(id) {
+  try {
+    const resp = await apiRequest(`/patients/${id}`);
+    const p = resp.patient;
+    document.getElementById('modal-detail-content').innerHTML = `
+      <div class="detail-item"><label>Patient ID</label><div class="val">${idHtml(p.id)}</div></div>
+      <div class="detail-item"><label>Full Name</label><div class="val"><strong>${p.name}</strong></div></div>
+      <div class="detail-item"><label>Age</label><div class="val">${p.age} years</div></div>
+      <div class="detail-item"><label>Priority</label><div class="val">${badgeHtml(p.priority)}</div></div>
+      <div class="detail-item" style="grid-column:1/-1;"><label>Disease / Condition</label><div class="val">${p.disease}</div></div>
+    `;
+    document.getElementById('modal-actions').innerHTML = `
+      <button class="btn btn-primary" onclick="queueFromDetail(${p.id})">+ Add to Queue</button>
+      <button class="btn btn-danger" onclick="removePatient(${p.id})">Remove Patient</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Close</button>
+    `;
+    document.getElementById('modal-detail').classList.add('open');
+  } catch (error) {
+    toast(error.message, 'error');
+  }
+}
+function closeModal() {
+  document.getElementById('modal-detail').classList.remove('open');
+}
+document.getElementById('modal-detail').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ═══════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════
+window.addEventListener('load', async () => {
+  try {
+    await refreshAll();
+    await renderPatientsTable();
+    await renderQueue();
+    renderHistory();
+  } catch (error) {
+    toast(error.message, 'error');
+  }
+});
+</script>
+</body>
+</html>
